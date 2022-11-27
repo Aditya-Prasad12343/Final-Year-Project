@@ -45,6 +45,7 @@ choice = st.sidebar.selectbox("Select Activities", activities)
 if choice == 'EDA':
     st.title("Exploratory Data Analysis")
     st.subheader("Final Year Project")
+    st.text("By Dishti Kundra and Aditya Prasad")
 
     data = st.file_uploader("Upload a Dataset", type=["csv", "txt"])
     st.info(
