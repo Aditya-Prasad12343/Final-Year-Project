@@ -39,8 +39,17 @@ def _max_width_():
 
 st.set_option('deprecation.showPyplotGlobalUse', False)
 
-activities = ["TEST", "EDA", "Plots","Handle NULL Values", "Graph Prediction"]
+activities = ["EDA", "Plots","Handle NULL Values", "Graph Prediction"]
 choice = st.sidebar.selectbox("Select Activities", activities)
+
+
+ data = st.file_uploader("Upload a Dataset", type=["csv", "txt"])
+    st.info(
+            f"""
+                    Sample File: [biostats.csv](https://people.sc.fsu.edu/~jburkardt/data/csv/biostats.csv)
+                    """
+    )
+
 
 if choice == 'EDA':
     st.title("Exploratory Data Analysis")
@@ -139,7 +148,6 @@ if choice == 'EDA':
 
 elif choice == 'Plots':
     st.subheader("Data Visualization")
-    data = st.file_uploader("Upload a Dataset", type=["csv", "txt", "xlsx"])
     if data is not None:
         df = pd.read_csv(data)
         st.dataframe(df.head())
