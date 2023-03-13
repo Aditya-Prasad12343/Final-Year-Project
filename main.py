@@ -39,7 +39,7 @@ def _max_width_():
 
 st.set_option('deprecation.showPyplotGlobalUse', False)
 
-activities = ["EDA", "Plots","Handle NULL Values", "Graph Prediction"]
+activities = ["TEST", "EDA", "Plots","Handle NULL Values", "Graph Prediction"]
 choice = st.sidebar.selectbox("Select Activities", activities)
 
 if choice == 'EDA':
