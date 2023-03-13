@@ -246,3 +246,66 @@ elif choice == 'Handle NULL Values':
             st.write("Resulting Dataframe:")
             st.write(df)
 
+elif choice == 'Graph Prediction':    
+    import streamlit as st
+    import pandas as pd
+    import numpy as np
+    from sklearn.preprocessing import LabelEncoder
+    from sklearn.model_selection import train_test_split
+    from sklearn.tree import DecisionTreeClassifier
+
+    # Load data
+    data = st.file_uploader("Upload a Dataset", type=["csv", "txt", "xlsx"])
+
+    # Convert categorical data to numerical using label encoding
+    le = LabelEncoder()
+    for col in data.columns:
+        if data[col].dtype == "object":
+            data[col] = le.fit_transform(data[col])
+
+    # Define X and y for classification model
+    X = data.iloc[:, :-1].values
+    y = data.iloc[:, -1].values
+
+    # Split data into training and testing sets
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+    # Train decision tree classifier
+    classifier = DecisionTreeClassifier()
+    classifier.fit(X_train, y_train)
+
+    # Define function to recommend visualization based on user input using trained classifier
+    def recommend_visualization(data_type, num_vars):
+        if data_type == "Relationship":
+            if num_vars == 2:
+                return "Scatter Plot 2 Variables"
+            elif num_vars == 3:
+                return "Bubble plot 3 Variables"
+            else:
+                return "Not enough variables for a relationship plot"
+        elif data_type == "Distribution":
+            return "Histogram"
+        elif data_type == "Comparison":
+            return "Bar Plot"
+        elif data_type == "Composition":
+            return "Pie Chart"
+        else:
+            return "Unsupported data type"
+
+    # Get user input for data type and number of variables
+    data_type = st.selectbox(
+        "What type of data are you visualizing?",
+        ("Relationship", "Distribution", "Comparison", "Composition")
+    )
+    num_vars = st.number_input("How many variables are you visualizing?", min_value=1, max_value=len(data.columns)-1)
+
+    # Convert user input to input format for classifier
+    input_data = np.array([[le.transform([data_type])[0], num_vars]])
+
+    # Use classifier to predict recommended visualization
+    visualization_code = classifier.predict(input_data)
+    visualization = recommend_visualization(data_type, num_vars)
+
+    # Display recommended visualization
+    st.write(f"The recommended visualization for {data_type} with {num_vars} variables is: {visualization}")
+
