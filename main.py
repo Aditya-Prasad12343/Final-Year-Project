@@ -224,26 +224,26 @@ elif choice == 'Handle NULL Values':
         df = pd.read_csv(data)
         st.dataframe(df.head())
         
-    # display the dataframe
-    st.write("Original Dataframe:")
-    st.write(df)
-
-    # define the options for handling missing values
-    options = ["Deleting the Missing values", "Deleting the Entire Row", "Deleting the Entire Column", 
-               "Imputing the Missing Value", "Replacing With Arbitrary Value", "Replacing With Mean", 
-               "Replacing With Mode", "Replacing With Median", "Replacing with Previous Value – Forward Fill", 
-               "Replacing with Next Value – Backward Fill", "Interpolation", 
-               "Imputing Missing Values For Categorical Features", "Impute the Most Frequent Value", 
-               "Impute the Value “missing”, which treats it as a Separate Category"]
-    # get the user's choice for handling missing values from a dropdown
-    choice = st.selectbox("Select the method for handling missing values:", options)
-
-    # confirm the selected method with a dialogue box
-    confirm = st.button("Confirm")
-    if confirm:
-        # handle missing values based on the user's choice
-        df = handle_missing_values(df, choice)
-        # display the resulting dataframe
-        st.write("Resulting Dataframe:")
+        # display the dataframe
+        st.write("Original Dataframe:")
         st.write(df)
+
+        # define the options for handling missing values
+        options = ["Deleting the Missing values", "Deleting the Entire Row", "Deleting the Entire Column", 
+                   "Imputing the Missing Value", "Replacing With Arbitrary Value", "Replacing With Mean", 
+                   "Replacing With Mode", "Replacing With Median", "Replacing with Previous Value – Forward Fill", 
+                   "Replacing with Next Value – Backward Fill", "Interpolation", 
+                   "Imputing Missing Values For Categorical Features", "Impute the Most Frequent Value", 
+                   "Impute the Value “missing”, which treats it as a Separate Category"]
+        # get the user's choice for handling missing values from a dropdown
+        choice = st.selectbox("Select the method for handling missing values:", options)
+
+        # confirm the selected method with a dialogue box
+        confirm = st.button("Confirm")
+        if confirm:
+            # handle missing values based on the user's choice
+            df = handle_missing_values(df, choice)
+            # display the resulting dataframe
+            st.write("Resulting Dataframe:")
+            st.write(df)
 
