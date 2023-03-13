@@ -224,8 +224,6 @@ elif choice == 'Handle NULL Values':
         df = pd.read_csv(data)
         st.dataframe(df.head())
         
-    df = pd.DataFrame(data)
-
     # display the dataframe
     st.write("Original Dataframe:")
     st.write(df)
