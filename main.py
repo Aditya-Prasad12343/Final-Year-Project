@@ -139,6 +139,7 @@ if choice == 'EDA':
 
 elif choice == 'Plots':
     st.subheader("Data Visualization")
+    data = st.file_uploader("Upload a Dataset", type=["csv", "txt", "xlsx"])
     if data is not None:
         df = pd.read_csv(data)
         st.dataframe(df.head())
@@ -176,5 +177,4 @@ elif choice == 'Plots':
                 cust_plot = df[selected_columns_names].plot(kind=type_of_plot)
                 st.write(cust_plot)
                 st.pyplot()
-
 
