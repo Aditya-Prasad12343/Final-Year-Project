@@ -43,11 +43,11 @@ activities = ["EDA", "Plots","Handle NULL Values", "Graph Prediction"]
 choice = st.sidebar.selectbox("Select Activities", activities)
 
 data = st.file_uploader("Upload a Dataset", type=["csv", "txt"])
-    st.info(
-            f"""
-                    Sample File: [biostats.csv](https://people.sc.fsu.edu/~jburkardt/data/csv/biostats.csv)
-                    """
-    )
+st.info(
+        f"""
+                Sample File: [biostats.csv](https://people.sc.fsu.edu/~jburkardt/data/csv/biostats.csv)
+                """
+)
 
 
 if choice == 'EDA':
