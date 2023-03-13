@@ -216,7 +216,6 @@ elif choice == 'Handle NULL Values':
             df = df.fillna(value='missing')
 
         return df
-
     # create a sample dataframe
     st.subheader("Handle Missing Values")
     data = st.file_uploader("Upload a Dataset", type=["csv", "txt", "xlsx"])
