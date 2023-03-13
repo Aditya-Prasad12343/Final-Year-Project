@@ -178,3 +178,74 @@ elif choice == 'Plots':
                 st.write(cust_plot)
                 st.pyplot()
 
+elif choice == 'Handle NULL Values':
+    def handle_missing_values(df, method):
+    if method == "Deleting the Missing values":
+        df = df.dropna()
+    elif method == "Deleting the Entire Row":
+        df = df.dropna(axis=0)
+    elif method == "Deleting the Entire Column":
+        df = df.dropna(axis=1)
+    elif method == "Imputing the Missing Value":
+        df = df.fillna(value=0) # replace missing values with 0
+    elif method == "Replacing With Arbitrary Value":
+        arbitrary_value = st.text_input("Enter the arbitrary value:")
+        df = df.fillna(value=arbitrary_value)
+    elif method == "Replacing With Mean":
+        mean = df.mean()
+        df = df.fillna(value=mean)
+    elif method == "Replacing With Mode":
+        mode = df.mode().iloc[0]
+        df = df.fillna(value=mode)
+    elif method == "Replacing With Median":
+        median = df.median()
+        df = df.fillna(value=median)
+    elif method == "Replacing with Previous Value – Forward Fill":
+        df = df.fillna(method='ffill')
+    elif method == "Replacing with Next Value – Backward Fill":
+        df = df.fillna(method='bfill')
+    elif method == "Interpolation":
+        df = df.interpolate()
+    elif method == "Imputing Missing Values For Categorical Features":
+        category = st.text_input("Enter the categorical feature:")
+        value = st.text_input("Enter the value for imputation:")
+        df[category] = df[category].fillna(value=value)
+    elif method == "Impute the Most Frequent Value":
+        df = df.apply(lambda x: x.fillna(x.value_counts().index[0]))
+    elif method == "Impute the Value “missing”, which treats it as a Separate Category":
+        df = df.fillna(value='missing')
+        
+    return df
+
+    # create a sample dataframe
+    st.subheader("Handle Missing Values")
+    data = st.file_uploader("Upload a Dataset", type=["csv", "txt", "xlsx"])
+    if data is not None:
+        df = pd.read_csv(data)
+        st.dataframe(df.head())
+        
+    df = pd.DataFrame(data)
+
+    # display the dataframe
+    st.write("Original Dataframe:")
+    st.write(df)
+
+    # define the options for handling missing values
+    options = ["Deleting the Missing values", "Deleting the Entire Row", "Deleting the Entire Column", 
+               "Imputing the Missing Value", "Replacing With Arbitrary Value", "Replacing With Mean", 
+               "Replacing With Mode", "Replacing With Median", "Replacing with Previous Value – Forward Fill", 
+               "Replacing with Next Value – Backward Fill", "Interpolation", 
+               "Imputing Missing Values For Categorical Features", "Impute the Most Frequent Value", 
+               "Impute the Value “missing”, which treats it as a Separate Category"]
+    # get the user's choice for handling missing values from a dropdown
+    choice = st.selectbox("Select the method for handling missing values:", options)
+
+    # confirm the selected method with a dialogue box
+    confirm = st.button("Confirm")
+    if confirm:
+        # handle missing values based on the user's choice
+        df = handle_missing_values(df, choice)
+        # display the resulting dataframe
+        st.write("Resulting Dataframe:")
+        st.write(df)
+
