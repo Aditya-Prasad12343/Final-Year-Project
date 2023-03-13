@@ -214,7 +214,7 @@ elif choice == 'Handle NULL Values':
             df = df.apply(lambda x: x.fillna(x.value_counts().index[0]))
         elif method == "Impute the Value “missing”, which treats it as a Separate Category":
             df = df.fillna(value='missing')
-
+            
         return df
     # create a sample dataframe
     st.subheader("Handle Missing Values")
