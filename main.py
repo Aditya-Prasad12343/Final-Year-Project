@@ -42,14 +42,6 @@ st.set_option('deprecation.showPyplotGlobalUse', False)
 activities = ["EDA", "Plots","Handle NULL Values", "Graph Prediction"]
 choice = st.sidebar.selectbox("Select Activities", activities)
 
-data = st.file_uploader("Upload a Dataset", type=["csv", "txt"])
-st.info(
-        f"""
-                Sample File: [biostats.csv](https://people.sc.fsu.edu/~jburkardt/data/csv/biostats.csv)
-                """
-)
-
-
 if choice == 'EDA':
     st.title("Exploratory Data Analysis")
     st.subheader("A Final Year Project")
@@ -147,6 +139,7 @@ if choice == 'EDA':
 
 elif choice == 'Plots':
     st.subheader("Data Visualization")
+    data = st.file_uploader("Upload a Dataset", type=["csv", "txt", "xlsx"])
     if data is not None:
         df = pd.read_csv(data)
         st.dataframe(df.head())
@@ -184,6 +177,5 @@ elif choice == 'Plots':
                 cust_plot = df[selected_columns_names].plot(kind=type_of_plot)
                 st.write(cust_plot)
                 st.pyplot()
-
 
 
