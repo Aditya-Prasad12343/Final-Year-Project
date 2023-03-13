@@ -22,6 +22,11 @@ from download import download_button
 from st_aggrid import GridUpdateMode, DataReturnMode
 
 
+from sklearn.preprocessing import LabelEncoder
+from sklearn.model_selection import train_test_split
+from sklearn.tree import DecisionTreeClassifier
+
+
 
 def _max_width_():
     max_width_str = f"max-width: 1800px;"
