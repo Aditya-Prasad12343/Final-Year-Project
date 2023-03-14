@@ -22,11 +22,6 @@ from download import download_button
 from st_aggrid import GridUpdateMode, DataReturnMode
 
 
-from sklearn.preprocessing import LabelEncoder
-from sklearn.model_selection import train_test_split
-from sklearn.tree import DecisionTreeClassifier
-
-
 
 def _max_width_():
     max_width_str = f"max-width: 1800px;"
@@ -255,62 +250,41 @@ elif choice == 'Graph Prediction':
     import streamlit as st
     import pandas as pd
     import numpy as np
-    from sklearn.preprocessing import LabelEncoder
+    import tensorflow as tf
+    from tensorflow import keras
     from sklearn.model_selection import train_test_split
-    from sklearn.tree import DecisionTreeClassifier
 
-    # Load data
-    data = st.file_uploader("Upload a Dataset", type=["csv", "txt", "xlsx"])
+    # Load the data from the Excel sheet
+    data = pd.read_excel('data.xlsx')
 
-    # Convert categorical data to numerical using label encoding
-    le = LabelEncoder()
-    for col in data.columns:
-        if data[col].dtype == "object":
-            data[col] = le.fit_transform(data[col])
+    # Preprocess the data (fill missing values, normalize, etc.)
+    data.fillna(data.mean(), inplace=True)
+    data = (data - data.mean()) / data.std()
 
-    # Define X and y for classification model
-    X = data.iloc[:, :-1].values
-    y = data.iloc[:, -1].values
+    # Define the model architecture
+    model = keras.Sequential([
+        keras.layers.Dense(64, activation='relu', input_shape=(6,)),
+        keras.layers.Dense(32, activation='relu'),
+        keras.layers.Dense(6, activation='softmax')
+    ])
 
-    # Split data into training and testing sets
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    # Compile the model
+    model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
 
-    # Train decision tree classifier
-    classifier = DecisionTreeClassifier()
-    classifier.fit(X_train, y_train)
+    # Split the data into training and testing sets
+    X_train, X_test, y_train, y_test = train_test_split(data.values, np.zeros((len(data), 6)), test_size=0.2)
 
-    # Define function to recommend visualization based on user input using trained classifier
-    def recommend_visualization(data_type, num_vars):
-        if data_type == "Relationship":
-            if num_vars == 2:
-                return "Scatter Plot 2 Variables"
-            elif num_vars == 3:
-                return "Bubble plot 3 Variables"
-            else:
-                return "Not enough variables for a relationship plot"
-        elif data_type == "Distribution":
-            return "Histogram"
-        elif data_type == "Comparison":
-            return "Bar Plot"
-        elif data_type == "Composition":
-            return "Pie Chart"
-        else:
-            return "Unsupported data type"
+    # Train the model
+    model.fit(X_train, y_train, epochs=10, batch_size=32, validation_data=(X_test, y_test))
 
-    # Get user input for data type and number of variables
-    data_type = st.selectbox(
-        "What type of data are you visualizing?",
-        ("Relationship", "Distribution", "Comparison", "Composition")
-    )
-    num_vars = st.number_input("How many variables are you visualizing?", min_value=1, max_value=len(data.columns)-1)
+    # Use the model to predict the best graph type for the selected columns
+    selected_columns = st.multiselect('Select columns', data.columns.tolist())
+    X = data[selected_columns].values
+    y_pred = model.predict(X)
 
-    # Convert user input to input format for classifier
-    input_data = np.array([[le.transform([data_type])[0], num_vars]])
+    # Map the output of the model to graph types
+    graph_types = ['scatter plot', 'line plot', 'bar plot', 'histogram', 'pie chart', 'heat map']
+    predicted_graph_types = [graph_types[np.argmax(p)] for p in y_pred]
 
-    # Use classifier to predict recommended visualization
-    visualization_code = classifier.predict(input_data)
-    visualization = recommend_visualization(data_type, num_vars)
-
-    # Display recommended visualization
-    st.write(f"The recommended visualization for {data_type} with {num_vars} variables is: {visualization}")
-
+    # Print the predicted graph types for the selected columns
+    st.write(f"The best graph types for columns {selected_columns} are: {predicted_graph_types}")
