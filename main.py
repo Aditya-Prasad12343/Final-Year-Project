@@ -249,78 +249,62 @@ elif choice == 'Handle NULL Values':
 elif choice == 'Graph Prediction':    
     import streamlit as st
     import pandas as pd
+    import seaborn as sns
     import matplotlib.pyplot as plt
+    from sklearn.neural_network import MLPRegressor
 
-    def analyze_data(data):
-        # Check data types of columns
-        dtypes = data.dtypes.unique()
+    # Create a Streamlit App
+    st.title("Graph Selector App")
 
-        # If all columns are numeric, suggest scatter plot
-        if len(dtypes) == 1 and dtypes[0] != 'object':
-            return "Scatter Plot"
-
-        # If one column is categorical, suggest bar chart or pie chart
-        elif len(dtypes) == 2 and 'object' in dtypes:
-            categorical_col = data.select_dtypes(include='object').columns[0]
-            if data[categorical_col].nunique() <= 10:
-                return "Bar Chart"
-            else:
-                return "Pie Chart"
-
-        # If two columns are numeric, suggest line plot or scatter plot
-        elif len(dtypes) == 2 and 'object' not in dtypes:
-            return "Line Plot" if abs(data.iloc[:,0].corr(data.iloc[:,1])) > 0.5 else "Scatter Plot"
-
-        # If more than two columns are selected, suggest heatmap
-        else:
-            return "Heatmap"
-
-
-    def generate_plot(data, suggested_graph_type):
-        # Generate plot based on suggested graph type
-        if suggested_graph_type == "Scatter Plot":
-            plt.scatter(data.iloc[:,0], data.iloc[:,1])
-            st.pyplot()
-        elif suggested_graph_type == "Bar Chart":
-            categorical_col = data.select_dtypes(include='object').columns[0]
-            data_counts = data[categorical_col].value_counts()
-            plt.bar(data_counts.index, data_counts.values)
-            plt.xticks(rotation=90)
-            st.pyplot()
-        elif suggested_graph_type == "Pie Chart":
-            categorical_col = data.select_dtypes(include='object').columns[0]
-            data_counts = data[categorical_col].value_counts()
-            plt.pie(data_counts.values, labels=data_counts.index, autopct='%1.1f%%')
-            st.pyplot()
-        elif suggested_graph_type == "Line Plot":
-            plt.plot(data.iloc[:,0], data.iloc[:,1])
-            st.pyplot()
-        elif suggested_graph_type == "Heatmap":
-            plt.imshow(data.corr())
-            plt.colorbar()
-            st.pyplot()
-
-
-    st.title("Select File and Columns")
-
-    # Allow user to upload file
-    file = st.file_uploader("Choose a file", type=["csv", "xlsx", "txt"])
+    # Create a file uploader
+    file = st.file_uploader("Upload your file", type=["csv", "xlsx", "txt"])
 
     if file is not None:
+        # Read the file using pandas
         df = pd.read_csv(file)
 
-        # Display list of columns to select
-        columns = list(df.columns)
-        selected_columns = st.multiselect("Select columns", columns)
+        # Display the dataframe
+        st.write("Selected Dataset:")
+        st.dataframe(df)
 
-        # Check if columns are selected
-        if len(selected_columns) > 0:
-            # Get data for selected columns
-            data = df[selected_columns]
+        # Let the user select the columns
+        columns = st.multiselect("Select columns", df.columns)
 
-            # Analyze data using AI and suggest graph type
-            suggested_graph_type = analyze_data(data)
-            st.write(f"Suggested Graph Type: {suggested_graph_type}")
+        # Display the selected columns
+        st.write("Selected Columns:")
+        st.write(columns)
 
-            # Generate plot based on suggested graph type
-            generate_plot(data, suggested_graph_type)
+        # Analyze the selected columns using a neural network
+        X = df[columns]
+        y = df[columns[0]]
+        reg = MLPRegressor().fit(X, y)
+
+        # Suggest a graph to the user based on the neural network predictions
+        prediction = reg.predict(X)
+        corr = pd.DataFrame({"Actual": y, "Predicted": prediction}).corr().iloc[0, 1]
+        if corr > 0.5:
+            # Suggest a line plot
+            st.write("We suggest using a line plot to show the relationship between the selected columns.")
+            plot = sns.lineplot(data=df[columns])
+            st.pyplot(plot.figure)
+        else:
+            # Suggest a scatter plot
+            st.write("We suggest using a scatter plot to show the relationship between the selected columns.")
+            plot = sns.scatterplot(data=df[columns])
+            st.pyplot(plot.figure)
+
+        # Suggest additional graph options based on the data type of the selected columns
+        for col in columns:
+            dtype = df[col].dtype
+            if dtype == "int64" or dtype == "float64":
+                # Suggest a histogram or box plot
+                st.write(f"For column '{col}', we suggest using a histogram or box plot to show the distribution.")
+                plot = sns.histplot(data=df[col], kde=True)
+                st.pyplot(plot.figure)
+                plot = sns.boxplot(data=df[col])
+                st.pyplot(plot.figure)
+            else:
+                # Suggest a bar plot
+                st.write(f"For column '{col}', we suggest using a bar plot to show the values.")
+                plot = sns.countplot(data=df[col])
+                st.pyplot(plot.figure)
