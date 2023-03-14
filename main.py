@@ -252,16 +252,11 @@ elif choice == 'Graph Prediction':
     import seaborn as sns
     import tensorflow as tf
 
-
     def suggest_graph(df, cols):
         # Preprocessing the data
-        num_cols = []
-        for col in cols:
-            if df[col].dtype == "float" or df[col].dtype == "int":
-                num_cols.append(col)
-        if len(num_cols) == 0:
-            return None
-        X = df[num_cols].values
+        df[cols] = df[cols].apply(pd.to_numeric, errors='coerce')
+        df = df.dropna()
+        X = df[cols].values
         X = tf.keras.utils.normalize(X)
         n_cols = X.shape[1]
 
@@ -276,7 +271,11 @@ elif choice == 'Graph Prediction':
         # Training the neural network
         y = df.columns.difference(cols)
         y = pd.get_dummies(y)
-        model.fit(X, y, epochs=100, verbose=0)
+        if X.shape[0] == y.shape[0]:
+            model.fit(X, y, epochs=100, verbose=0)
+        else:
+            st.write("Error: Data cardinality is ambiguous. Please ensure that all columns have the same number of samples.")
+            return None
 
         # Predicting the best graph based on the neural network
         graph_types = y.columns
@@ -284,27 +283,27 @@ elif choice == 'Graph Prediction':
         graph_type = graph_types[graph_probs.argmax()]
 
         if graph_type == "scatter":
-            return sns.scatterplot(data=df[num_cols])
+            return sns.scatterplot(data=df[cols])
         elif graph_type == "line":
-            return sns.lineplot(data=df[num_cols])
+            return sns.lineplot(data=df[cols])
         elif graph_type == "bar":
-            return sns.barplot(data=df[num_cols])
+            return sns.barplot(data=df[cols])
         elif graph_type == "histogram":
-            return sns.histplot(data=df[num_cols])
+            return sns.histplot(data=df[cols])
         elif graph_type == "regression":
-            return sns.lmplot(data=df[num_cols], x=num_cols[0], y=num_cols[1])
+            return sns.lmplot(data=df[cols], x=cols[0], y=cols[1])
         elif graph_type == "stackedbar":
-            return sns.barplot(data=df[num_cols], hue=num_cols[1], x=num_cols[0], estimator=sum)
+            return sns.barplot(data=df[cols], hue=cols[1], x=cols[0], estimator=sum)
         elif graph_type == "boxplot":
-            return sns.boxplot(data=df[num_cols])
+            return sns.boxplot(data=df[cols])
         elif graph_type == "violinplot":
-            return sns.violinplot(data=df[num_cols])
+            return sns.violinplot(data=df[cols])
         elif graph_type == "heatmap":
-            return sns.heatmap(data=df[num_cols].corr(), cmap="coolwarm", annot=True)
+            return sns.heatmap(data=df[cols].corr(), cmap="coolwarm", annot=True)
         elif graph_type == "areachart":
-            return sns.lineplot(data=df[num_cols], drawstyle="steps-post", alpha=0.4)
+            return sns.lineplot(data=df[cols], drawstyle="steps-post", alpha=0.4)
         elif graph_type == "bubblechart":
-            return sns.scatterplot(data=df[num_cols], x=num_cols[0], y=num_cols[1], size=num_cols[2], sizes=(20, 200))
+            return sns.scatterplot(data=df[cols], x=cols[0], y=cols[1], size=cols[2], sizes=(20, 200))
         else:
             return None
 
@@ -312,7 +311,6 @@ elif choice == 'Graph Prediction':
     # Streamlit app
     st.title("Graph Suggestion Engine")
 
-    # File upload and column selection
     file = st.file_uploader("Upload a file", type=["csv", "xlsx", "xls", "txt"])
     if file is not None:
         file_extension = file.name.split(".")[-1]
@@ -337,4 +335,3 @@ elif choice == 'Graph Prediction':
                     st.pyplot(graph.figure)
                 else:
                     st.error
-
