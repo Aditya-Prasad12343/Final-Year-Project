@@ -249,38 +249,79 @@ elif choice == 'Handle NULL Values':
 elif choice == 'Graph Prediction':    
     import streamlit as st
     import pandas as pd
-    import numpy as np
     import tensorflow as tf
-    from tensorflow import keras
-    from sklearn.model_selection import train_test_split
+    import matplotlib.pyplot as plt
+    import seaborn as sns
 
-    # Load the data from the Excel sheet
-    data = st.file_uploader("Upload a Dataset", type=["csv", "txt"])
+    # Setting up the app layout
+    st.set_page_config(page_title="Graph Suggestion Tool", page_icon=":bar_chart:", layout="wide")
 
-    # Define the model architecture
-    model = keras.Sequential([
-        keras.layers.Dense(64, activation='relu', input_shape=(6,)),
-        keras.layers.Dense(32, activation='relu'),
-        keras.layers.Dense(6, activation='softmax')
-    ])
+    # Creating a file uploader widget
+    uploaded_file = st.file_uploader("Upload your Excel file here:", type=["xlsx", "xls"])
 
-    # Compile the model
-    model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+    # Creating a checkbox to allow the user to select which columns to analyze
+    if uploaded_file is not None:
+        st.write("Selected Excel file:")
+        data = pd.read_excel(uploaded_file)
+        st.write(data.head())
 
-    # Split the data into training and testing sets
-    X_train, X_test, y_train, y_test = train_test_split(data.values, np.zeros((len(data), 6)), test_size=0.2)
+        selected_columns = st.multiselect("Select the columns to analyze:", data.columns)
+        st.write("Selected columns:", selected_columns)
 
-    # Train the model
-    model.fit(X_train, y_train, epochs=10, batch_size=32, validation_data=(X_test, y_test))
+        def suggest_graph(df, cols):
+            # Preprocessing the data
+            X = df[cols].values
+            X = tf.keras.utils.normalize(X)
+            n_cols = X.shape[1]
 
-    # Use the model to predict the best graph type for the selected columns
-    selected_columns = st.multiselect('Select columns', data.columns.tolist())
-    X = data[selected_columns].values
-    y_pred = model.predict(X)
+            # Creating the neural network
+            model = tf.keras.models.Sequential()
+            model.add(tf.keras.layers.Dense(64, activation="relu", input_shape=(n_cols,)))
+            model.add(tf.keras.layers.Dense(32, activation="relu"))
+            model.add(tf.keras.layers.Dense(16, activation="relu"))
+            model.add(tf.keras.layers.Dense(9, activation="softmax"))
+            model.compile(optimizer="adam", loss="categorical_crossentropy", metrics=["accuracy"])
 
-    # Map the output of the model to graph types
-    graph_types = ['scatter plot', 'line plot', 'bar plot', 'histogram', 'pie chart', 'heat map']
-    predicted_graph_types = [graph_types[np.argmax(p)] for p in y_pred]
+            # Training the neural network
+            y = df.columns.difference(cols)
+            y = pd.get_dummies(y)
+            model.fit(X, y, epochs=100, verbose=0)
 
-    # Print the predicted graph types for the selected columns
-    st.write(f"The best graph types for columns {selected_columns} are: {predicted_graph_types}")
+            # Predicting the best graph based on the neural network
+            graph_types = y.columns
+            graph_probs = model.predict(X)[0]
+            graph_type = graph_types[graph_probs.argmax()]
+
+            if graph_type == "scatter":
+                return sns.scatterplot(data=df[cols])
+            elif graph_type == "line":
+                return sns.lineplot(data=df[cols])
+            elif graph_type == "bar":
+                return sns.barplot(data=df[cols])
+            elif graph_type == "histogram":
+                return sns.histplot(data=df[cols])
+            elif graph_type == "regression":
+                return sns.lmplot(data=df[cols], x=cols[0], y=cols[1])
+            elif graph_type == "stackedbar":
+                return sns.barplot(data=df[cols], hue=cols[1], x=cols[0], estimator=sum)
+            elif graph_type == "boxplot":
+                return sns.boxplot(data=df[cols])
+            elif graph_type == "violinplot":
+                return sns.violinplot(data=df[cols])
+            elif graph_type == "heatmap":
+                return sns.heatmap(data=df[cols].corr(), cmap="coolwarm", annot=True)
+            elif graph_type == "areachart":
+                return sns.lineplot(data=df[cols], drawstyle="steps-post", alpha=0.4)
+            elif graph_type == "bubblechart":
+                return sns.scatterplot(data=df[cols], x=cols[0], y=cols[1], size=cols[2], sizes=(20, 200))
+            else:
+                return None
+
+
+        # Using the suggest_graph function to generate a suggested graph
+        graph = suggest_graph(data, selected_columns)
+        if graph is not None:
+            st.write("Suggested graph:")
+            st.pyplot(graph.figure)
+        else:
+            st.write("No suggested graph.")
