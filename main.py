@@ -268,43 +268,47 @@ elif choice == 'Graph Prediction':
         st.dataframe(df)
 
         # Let the user select the columns
-        columns = st.multiselect("Select columns", df.columns)
+        selected_columns = st.multiselect("Select columns", df.columns)
 
-        # Display the selected columns
-        st.write("Selected Columns:")
-        st.write(columns)
+        # Create a confirmation button
+        confirm = st.button("Confirm")
 
-        # Analyze the selected columns using a neural network
-        X = df[columns]
-        y = df[columns[0]]
-        reg = MLPRegressor().fit(X, y)
+        if confirm:
+            # Display the selected columns
+            st.write("Selected Columns:")
+            st.write(selected_columns)
 
-        # Suggest a graph to the user based on the neural network predictions
-        prediction = reg.predict(X)
-        corr = pd.DataFrame({"Actual": y, "Predicted": prediction}).corr().iloc[0, 1]
-        if corr > 0.5:
-            # Suggest a line plot
-            st.write("We suggest using a line plot to show the relationship between the selected columns.")
-            plot = sns.lineplot(data=df[columns])
-            st.pyplot(plot.figure)
-        else:
-            # Suggest a scatter plot
-            st.write("We suggest using a scatter plot to show the relationship between the selected columns.")
-            plot = sns.scatterplot(data=df[columns])
-            st.pyplot(plot.figure)
+            # Analyze the selected columns using a neural network
+            X = df[selected_columns]
+            y = df[selected_columns[0]]
+            reg = MLPRegressor().fit(X, y)
 
-        # Suggest additional graph options based on the data type of the selected columns
-        for col in columns:
-            dtype = df[col].dtype
-            if dtype == "int64" or dtype == "float64":
-                # Suggest a histogram or box plot
-                st.write(f"For column '{col}', we suggest using a histogram or box plot to show the distribution.")
-                plot = sns.histplot(data=df[col], kde=True)
-                st.pyplot(plot.figure)
-                plot = sns.boxplot(data=df[col])
+            # Suggest a graph to the user based on the neural network predictions
+            prediction = reg.predict(X)
+            corr = pd.DataFrame({"Actual": y, "Predicted": prediction}).corr().iloc[0, 1]
+            if corr > 0.5:
+                # Suggest a line plot
+                st.write("We suggest using a line plot to show the relationship between the selected columns.")
+                plot = sns.lineplot(data=df[selected_columns])
                 st.pyplot(plot.figure)
             else:
-                # Suggest a bar plot
-                st.write(f"For column '{col}', we suggest using a bar plot to show the values.")
-                plot = sns.countplot(data=df[col])
+                # Suggest a scatter plot
+                st.write("We suggest using a scatter plot to show the relationship between the selected columns.")
+                plot = sns.scatterplot(data=df[selected_columns])
                 st.pyplot(plot.figure)
+
+            # Suggest additional graph options based on the data type of the selected columns
+            for col in selected_columns:
+                dtype = df[col].dtype
+                if dtype == "object":
+                    # Suggest a bar plot for categorical columns
+                    st.write(f"For column '{col}', we suggest using a bar plot to show the values.")
+                    plot = sns.countplot(data=df[col])
+                    st.pyplot(plot.figure)
+                else:
+                    # Suggest a histogram or box plot for numeric columns
+                    st.write(f"For column '{col}', we suggest using a histogram or box plot to show the distribution.")
+                    plot = sns.histplot(data=df[col], kde=True)
+                    st.pyplot(plot.figure)
+                    plot = sns.boxplot(data=df[col])
+                    st.pyplot(plot.figure)
