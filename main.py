@@ -249,89 +249,78 @@ elif choice == 'Handle NULL Values':
 elif choice == 'Graph Prediction':    
     import streamlit as st
     import pandas as pd
-    import seaborn as sns
-    import tensorflow as tf
+    import matplotlib.pyplot as plt
 
-    def suggest_graph(df, cols):
-        # Preprocessing the data
-        df[cols] = df[cols].apply(pd.to_numeric, errors='coerce')
-        df = df.dropna()
-        X = df[cols].values
-        X = tf.keras.utils.normalize(X)
-        n_cols = X.shape[1]
+    def analyze_data(data):
+        # Check data types of columns
+        dtypes = data.dtypes.unique()
 
-        # Creating the neural network
-        model = tf.keras.models.Sequential()
-        model.add(tf.keras.layers.Dense(64, activation="relu", input_shape=(n_cols,)))
-        model.add(tf.keras.layers.Dense(32, activation="relu"))
-        model.add(tf.keras.layers.Dense(16, activation="relu"))
-        model.add(tf.keras.layers.Dense(9, activation="softmax"))
-        model.compile(optimizer="adam", loss="categorical_crossentropy", metrics=["accuracy"])
+        # If all columns are numeric, suggest scatter plot
+        if len(dtypes) == 1 and dtypes[0] != 'object':
+            return "Scatter Plot"
 
-        # Training the neural network
-        y = df.columns.difference(cols)
-        y = pd.get_dummies(y)
-        if X.shape[0] == y.shape[0]:
-            model.fit(X, y, epochs=100, verbose=0)
-        else:
-            st.write("Error: Data cardinality is ambiguous. Please ensure that all columns have the same number of samples.")
-            return None
-
-        # Predicting the best graph based on the neural network
-        graph_types = y.columns
-        graph_probs = model.predict(X)[0]
-        graph_type = graph_types[graph_probs.argmax()]
-
-        if graph_type == "scatter":
-            return sns.scatterplot(data=df[cols])
-        elif graph_type == "line":
-            return sns.lineplot(data=df[cols])
-        elif graph_type == "bar":
-            return sns.barplot(data=df[cols])
-        elif graph_type == "histogram":
-            return sns.histplot(data=df[cols])
-        elif graph_type == "regression":
-            return sns.lmplot(data=df[cols], x=cols[0], y=cols[1])
-        elif graph_type == "stackedbar":
-            return sns.barplot(data=df[cols], hue=cols[1], x=cols[0], estimator=sum)
-        elif graph_type == "boxplot":
-            return sns.boxplot(data=df[cols])
-        elif graph_type == "violinplot":
-            return sns.violinplot(data=df[cols])
-        elif graph_type == "heatmap":
-            return sns.heatmap(data=df[cols].corr(), cmap="coolwarm", annot=True)
-        elif graph_type == "areachart":
-            return sns.lineplot(data=df[cols], drawstyle="steps-post", alpha=0.4)
-        elif graph_type == "bubblechart":
-            return sns.scatterplot(data=df[cols], x=cols[0], y=cols[1], size=cols[2], sizes=(20, 200))
-        else:
-            return None
-
-
-    # Streamlit app
-    st.title("Graph Suggestion Engine")
-
-    file = st.file_uploader("Upload a file", type=["csv", "xlsx", "xls", "txt"])
-    if file is not None:
-        file_extension = file.name.split(".")[-1]
-        if file_extension == "csv":
-            df = pd.read_csv(file)
-        elif file_extension in ["xlsx", "xls"]:
-            df = pd.read_excel(file)
-        elif file_extension == "txt":
-            df = pd.read_table(file)
-        else:
-            st.error("Unsupported file format.")
-            st.stop()
-        cols = st.multiselect("Select columns for analysis", df.columns)
-
-        # Graph suggestion
-        if st.button("Suggest Graph"):
-            if len(cols) < 2:
-                st.error("Please select at least 2 columns.")
+        # If one column is categorical, suggest bar chart or pie chart
+        elif len(dtypes) == 2 and 'object' in dtypes:
+            categorical_col = data.select_dtypes(include='object').columns[0]
+            if data[categorical_col].nunique() <= 10:
+                return "Bar Chart"
             else:
-                graph = suggest_graph(df, cols)
-                if graph is not None:
-                    st.pyplot(graph.figure)
-                else:
-                    st.error
+                return "Pie Chart"
+
+        # If two columns are numeric, suggest line plot or scatter plot
+        elif len(dtypes) == 2 and 'object' not in dtypes:
+            return "Line Plot" if abs(data.iloc[:,0].corr(data.iloc[:,1])) > 0.5 else "Scatter Plot"
+
+        # If more than two columns are selected, suggest heatmap
+        else:
+            return "Heatmap"
+
+
+    def generate_plot(data, suggested_graph_type):
+        # Generate plot based on suggested graph type
+        if suggested_graph_type == "Scatter Plot":
+            plt.scatter(data.iloc[:,0], data.iloc[:,1])
+            st.pyplot()
+        elif suggested_graph_type == "Bar Chart":
+            categorical_col = data.select_dtypes(include='object').columns[0]
+            data_counts = data[categorical_col].value_counts()
+            plt.bar(data_counts.index, data_counts.values)
+            plt.xticks(rotation=90)
+            st.pyplot()
+        elif suggested_graph_type == "Pie Chart":
+            categorical_col = data.select_dtypes(include='object').columns[0]
+            data_counts = data[categorical_col].value_counts()
+            plt.pie(data_counts.values, labels=data_counts.index, autopct='%1.1f%%')
+            st.pyplot()
+        elif suggested_graph_type == "Line Plot":
+            plt.plot(data.iloc[:,0], data.iloc[:,1])
+            st.pyplot()
+        elif suggested_graph_type == "Heatmap":
+            plt.imshow(data.corr())
+            plt.colorbar()
+            st.pyplot()
+
+
+    st.title("Select File and Columns")
+
+    # Allow user to upload file
+    file = st.file_uploader("Choose a file", type=["csv", "xlsx", "txt"])
+
+    if file is not None:
+        df = pd.read_csv(file)
+
+        # Display list of columns to select
+        columns = list(df.columns)
+        selected_columns = st.multiselect("Select columns", columns)
+
+        # Check if columns are selected
+        if len(selected_columns) > 0:
+            # Get data for selected columns
+            data = df[selected_columns]
+
+            # Analyze data using AI and suggest graph type
+            suggested_graph_type = analyze_data(data)
+            st.write(f"Suggested Graph Type: {suggested_graph_type}")
+
+            # Generate plot based on suggested graph type
+            generate_plot(data, suggested_graph_type)
