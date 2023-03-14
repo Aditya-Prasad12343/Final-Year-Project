@@ -84,7 +84,7 @@ if choice == 'EDA':
             )
 
             df = pd.DataFrame(response["selected_rows"])
-
+            
             st.subheader("Filtered data will appear below 👇 ")
             st.text("")
 
@@ -254,7 +254,7 @@ elif choice == 'Graph Prediction':
     import seaborn as sns
 
     # Creating a file uploader widget
-    uploaded_file = st.file_uploader("Upload your Excel file here:", type=["xlsx", "xls"])
+    uploaded_file = st.file_uploader("Upload a Dataset", type=["csv", "txt", "xlsx"])
 
     # Creating a checkbox to allow the user to select which columns to analyze
     if uploaded_file is not None:
