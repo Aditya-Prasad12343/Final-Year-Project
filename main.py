@@ -257,8 +257,7 @@ elif choice == 'Graph Prediction':
     # Load the data from the Excel sheet
     data = st.file_uploader("Upload a Dataset", type=["csv", "txt"])
 
-    # Preprocess the data (fill missing values, normalize, etc.)
-    data.fillna(data.mean())
+    # Preprocess the data (fill missing values, normalize, etc.
     data = (data - data.mean()) / data.std()
 
     # Define the model architecture
