@@ -247,7 +247,7 @@ elif choice == 'Handle NULL Values':
             st.write(df)
 
 elif choice == 'Graph Prediction':    
-    import streamlit as st
+   import streamlit as st
     import pandas as pd
     import seaborn as sns
     import tensorflow as tf
@@ -255,7 +255,13 @@ elif choice == 'Graph Prediction':
 
     def suggest_graph(df, cols):
         # Preprocessing the data
-        X = df[cols].values
+        num_cols = []
+        for col in cols:
+            if df[col].dtype == "float" or df[col].dtype == "int":
+                num_cols.append(col)
+        if len(num_cols) == 0:
+            return None
+        X = df[num_cols].values
         X = tf.keras.utils.normalize(X)
         n_cols = X.shape[1]
 
@@ -278,27 +284,27 @@ elif choice == 'Graph Prediction':
         graph_type = graph_types[graph_probs.argmax()]
 
         if graph_type == "scatter":
-            return sns.scatterplot(data=df[cols])
+            return sns.scatterplot(data=df[num_cols])
         elif graph_type == "line":
-            return sns.lineplot(data=df[cols])
+            return sns.lineplot(data=df[num_cols])
         elif graph_type == "bar":
-            return sns.barplot(data=df[cols])
+            return sns.barplot(data=df[num_cols])
         elif graph_type == "histogram":
-            return sns.histplot(data=df[cols])
+            return sns.histplot(data=df[num_cols])
         elif graph_type == "regression":
-            return sns.lmplot(data=df[cols], x=cols[0], y=cols[1])
+            return sns.lmplot(data=df[num_cols], x=num_cols[0], y=num_cols[1])
         elif graph_type == "stackedbar":
-            return sns.barplot(data=df[cols], hue=cols[1], x=cols[0], estimator=sum)
+            return sns.barplot(data=df[num_cols], hue=num_cols[1], x=num_cols[0], estimator=sum)
         elif graph_type == "boxplot":
-            return sns.boxplot(data=df[cols])
+            return sns.boxplot(data=df[num_cols])
         elif graph_type == "violinplot":
-            return sns.violinplot(data=df[cols])
+            return sns.violinplot(data=df[num_cols])
         elif graph_type == "heatmap":
-            return sns.heatmap(data=df[cols].corr(), cmap="coolwarm", annot=True)
+            return sns.heatmap(data=df[num_cols].corr(), cmap="coolwarm", annot=True)
         elif graph_type == "areachart":
-            return sns.lineplot(data=df[cols], drawstyle="steps-post", alpha=0.4)
+            return sns.lineplot(data=df[num_cols], drawstyle="steps-post", alpha=0.4)
         elif graph_type == "bubblechart":
-            return sns.scatterplot(data=df[cols], x=cols[0], y=cols[1], size=cols[2], sizes=(20, 200))
+            return sns.scatterplot(data=df[num_cols], x=num_cols[0], y=num_cols[1], size=num_cols[2], sizes=(20, 200))
         else:
             return None
 
@@ -331,3 +337,4 @@ elif choice == 'Graph Prediction':
                     st.pyplot(graph.figure)
                 else:
                     st.error
+
