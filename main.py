@@ -253,9 +253,6 @@ elif choice == 'Graph Prediction':
     import matplotlib.pyplot as plt
     import seaborn as sns
 
-    # Setting up the app layout
-    st.set_page_config(page_title="Graph Suggestion Tool", page_icon=":bar_chart:", layout="wide")
-
     # Creating a file uploader widget
     uploaded_file = st.file_uploader("Upload your Excel file here:", type=["xlsx", "xls"])
 
