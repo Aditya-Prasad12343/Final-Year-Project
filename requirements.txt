@@ -9,3 +9,5 @@ seaborn~=0.12.1
 htbuilder~=0.6.1
 scipy~= 1.9.3
 scikit-learn 
+tensorflow-cpu==1.15
+keras==2.3.0
